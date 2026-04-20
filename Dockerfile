@@ -12,3 +12,9 @@ RUN curl -sS https://getcomposer.org/installer | php
 RUN php composer.phar install
 
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+
+RUN mkdir -p storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    bootstrap/cache \
+    && chmod -R 777 storage bootstrap/cache
