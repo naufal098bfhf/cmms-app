@@ -144,7 +144,7 @@ class TugasTetapController extends Controller
 
         $tugasTetap = $query->latest()->get();
 
-        return view('Admin.kelola-tugas.tugas-tetap.index', compact('tugasTetap'));
+        return view('admin.kelola-tugas.tugas-tetap.index', compact('tugasTetap'));
     }
 
     // ===============================
@@ -220,7 +220,7 @@ class TugasTetapController extends Controller
         $mekanik = User::where('role', 'mekanik')->get();
         $equipment = Equipment::all();
 
-        return view('Admin.kelola-tugas.tugas-tetap.edit', compact('tugas', 'mekanik', 'equipment'));
+        return view('admin.kelola-tugas.tugas-tetap.edit', compact('tugas', 'mekanik', 'equipment'));
     }
 
     public function update(Request $request, $id)

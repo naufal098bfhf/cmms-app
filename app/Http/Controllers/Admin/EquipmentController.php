@@ -29,12 +29,12 @@ class EquipmentController extends Controller
         $equipment = $query->latest()->paginate(10);
         $equipment->appends($request->all());
 
-        return view('Admin.kelola-equipment.index', compact('equipment'));
+        return view('admin.kelola-equipment.index', compact('equipment'));
     }
 
     public function create()
     {
-        return view('Admin.kelola-equipment.create');
+        return view('admin.kelola-equipment.create');
     }
 
     public function store(Request $request)
@@ -56,7 +56,7 @@ class EquipmentController extends Controller
     public function edit($id)
     {
         $equipment = Equipment::findOrFail($id);
-        return view('Admin.kelola-equipment.edit', compact('equipment'));
+        return view('admin.kelola-equipment.edit', compact('equipment'));
     }
 
     public function update(Request $request, $id)

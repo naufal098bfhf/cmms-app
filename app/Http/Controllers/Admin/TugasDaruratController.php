@@ -40,7 +40,7 @@ class TugasDaruratController extends Controller
 
         $tugasDarurat = $query->latest()->get();
 
-        return view('Admin.kelola-tugas.tugas-darurat.index', compact('tugasDarurat'));
+        return view('admin.kelola-tugas.tugas-darurat.index', compact('tugasDarurat'));
     }
 
     public function create()
@@ -48,7 +48,7 @@ class TugasDaruratController extends Controller
         $mekanik = User::where('role', 'mekanik')->get();
         $equipment = Equipment::all();
 
-        return view('Admin.kelola-tugas.tugas-darurat.create', compact('mekanik', 'equipment'));
+        return view('admin.kelola-tugas.tugas-darurat.create', compact('mekanik', 'equipment'));
     }
 
     public function store(Request $request)
@@ -115,7 +115,7 @@ class TugasDaruratController extends Controller
         $mekanik = User::where('role', 'mekanik')->get();
         $equipments = Equipment::all();
 
-        return view('Admin.kelola-tugas.tugas-darurat.edit', compact('tugasDarurat', 'mekanik', 'equipments'));
+        return view('admin.kelola-tugas.tugas-darurat.edit', compact('tugasDarurat', 'mekanik', 'equipments'));
     }
 
     public function update(Request $request, $id)

@@ -33,7 +33,7 @@ class UserController extends Controller
     public function create()
     {
         $roles = ['admin', 'mekanik', 'user', 'maintenance_planning'];
-        return view('Admin.users.create', compact('roles'));
+        return view('admin.users.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -73,7 +73,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
         $roles = ['admin', 'mekanik', 'user', 'maintenance_planning'];
-        return view('Admin.users.edit', ['user' => $user, 'roles' => $roles]);
+        return view('admin.users.edit', ['user' => $user, 'roles' => $roles]);
     }
 
    public function update(Request $request, User $user)
@@ -127,6 +127,6 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        return view('Admin.users.show', compact('user'));
+        return view('admin.users.show', compact('user'));
     }
 }
