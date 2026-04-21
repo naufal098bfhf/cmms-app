@@ -27,7 +27,7 @@ class UserController extends Controller
         }
 
         $users = $query->latest()->get();
-        return view('Admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users'));
     }
 
     public function create()
