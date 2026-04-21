@@ -155,7 +155,7 @@ class TugasTetapController extends Controller
         $mekanik = User::where('role', 'mekanik')->get();
         $equipment = Equipment::all();
 
-        return view('Admin.kelola-tugas.tugas-tetap.create', compact('mekanik', 'equipment'));
+        return view('admin.kelola-tugas.tugas-tetap.create', compact('mekanik', 'equipment'));
     }
 
     // ===============================
