@@ -205,3 +205,7 @@ Route::get('/storage/photos/{filename}', function ($filename) {
 
     return Response::file($path);
 })->where('filename', '.*');
+
+Route::get('/cek-user', function () {
+    return \App\Models\User::all();
+});
