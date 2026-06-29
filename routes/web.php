@@ -48,7 +48,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 | ADMIN ROUTES
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,maintenance-planning,mekanik'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,owner,maintenance-planning,mekanik'])->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 

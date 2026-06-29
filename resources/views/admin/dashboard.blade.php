@@ -77,7 +77,7 @@ $tugasTetap   = TugasTetap::latest()->get();
 
             <!-- User Info -->
             <div class="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-full shadow-inner">
-                <img src="{{ Auth::user()->photo ? asset('storage/' . Auth::user()->photo) : asset('images/orang.webp') }}"
+                <img src="{{ Auth::user()->photo ? '/storage/' . Auth::user()->photo : '/images/orang.webp' }}"
                      class="w-10 h-10 rounded-full border-2 border-red-200 object-cover"
                      alt="{{ Auth::user()->name }}">
                 <span class="font-semibold text-gray-800">{{ Auth::user()->name }}</span>

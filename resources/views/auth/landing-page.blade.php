@@ -78,7 +78,11 @@
     <div class="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex items-center justify-between">
 
         <div class="flex items-center space-x-3">
-            <img src="{{ asset('images/logo2.png') }}" alt="Logo" class="h-10 md:h-12 object-contain">
+            <img
+    src="/images/logo2.png"
+    alt="Logo"
+    class="w-16 h-16 object-contain"
+/>
             <h1 class="text-lg md:text-xl font-bold uppercase tracking-wide text-[var(--red-main)] hover:text-[var(--red-dark)] transition-colors duration-300">
                 Politeknik Industri Petrokimia
             </h1>
@@ -109,9 +113,9 @@
 
 {{-- Hero Section --}}
 <section id="beranda" class="relative h-[90vh] flex items-center bg-cover bg-center bg-no-repeat"
-style="background-image: url('{{ asset('images/gedung.jpg') }}');">
+style="background-image: url('/images/gedung.jpg');"
 
-    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="absolute inset-0 bg-black opacity-70"></div>
 
     <div class="relative z-10 text-white px-8 md:px-16 lg:px-24 max-w-3xl reveal">
         <p class="text-sm uppercase tracking-wider mb-4 opacity-90">
@@ -192,7 +196,7 @@ style="background-image: url('{{ asset('images/gedung.jpg') }}');">
     </div>
 
     <div class="flex justify-center md:justify-end">
-      <img src="{{ asset('images/cmms.jpeg') }}"
+      <img src="/images/cmms.jpeg"
            alt="Ilustrasi CMMS"
            class="w-full max-w-md md:max-w-lg h-auto rounded-2xl shadow-xl object-cover">
     </div>

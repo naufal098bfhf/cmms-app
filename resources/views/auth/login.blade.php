@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/build/assets/app-4t-gDPCL.css">
 
     <!-- Favicon (Logo di Title) -->
-    <link rel="icon" type="image/png" href="{{ asset('images/logo2.png') }}">
+    <link rel="icon" type="image/png" href="/images/logo2.png">
 
     <title>Halaman Login</title>
 </head>
@@ -72,7 +72,7 @@
                     <button class="hidden" id="login">Sign In</button>
                 </div>
                 <div class="toggle-panel toggle-right">
-                    <img src="{{ asset('images/logo2.png') }}" alt="Logo" id="register" class="logo-instansi">
+                    <img src="/images/logo2.png" alt="Logo" id="register" class="logo-instansi">
                     <h3>Politeknik Industri Petrokimia Banten</h3>
                 </div>
             </div>

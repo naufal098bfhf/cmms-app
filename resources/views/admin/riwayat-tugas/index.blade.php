@@ -91,7 +91,7 @@
                         {{-- Kolom Foto Bukti --}}
                         <td class="p-2 border text-center">
                             @if (!empty($t['bukti_foto']))
-                                <a href="{{ asset('storage/' . $t['bukti_foto']) }}" target="_blank" class="text-gray-700 hover:text-gray-900">
+                             <a href="/storage/{{ $t['bukti_foto'] }}" target="_blank" class="text-gray-700 hover:text-gray-900">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />

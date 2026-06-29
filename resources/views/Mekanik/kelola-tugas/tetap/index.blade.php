@@ -100,47 +100,85 @@
                         </td>
 
                         <!-- BUKTI FOTO -->
-                        <td class="p-1 sm:p-2 border-b">
-                            <div class="flex items-center gap-3 justify-center">
+<!-- BUKTI FOTO -->
+<td class="p-3 border-b">
+    <div class="flex items-center justify-center gap-2">
 
-                                {{-- Lihat Foto --}}
-                                @if($fotoExists)
-                                    <a href="{{ asset('storage/' . $tugas->bukti_foto) }}?t={{ filemtime(storage_path('app/public/' . $tugas->bukti_foto)) }}"
-                                       target="_blank"
-                                       class="text-blue-500 hover:text-blue-600 transition"
-                                       title="Lihat Foto">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-                                @else
-                                    <span class="text-gray-400 flex items-center justify-center" title="Belum ada foto">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 012.365-3.682m3.67-2.361A9.962 9.962 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.958 9.958 0 01-1.657 2.774M15 12a3 3 0 11-6 0 3 3 0z"/>
-                                        </svg>
-                                    </span>
-                                @endif
+        {{-- STATUS --}}
+        @if($fotoExists)
+            <div class="flex items-center gap-1 px-2 py-1
+                        rounded-full bg-emerald-100 text-emerald-700
+                        text-[11px] font-semibold shadow-sm whitespace-nowrap">
 
-                                {{-- Upload/Ganti Foto --}}
-                                <form action="{{ route('mekanik.tugas-tetap.upload', $tugas->id) }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3 m-0 p-0">
-                                    @csrf
-                                    <input type="file" name="bukti_foto" accept="image/*" class="hidden" id="uploadFoto{{ $tugas->id }}">
-                                    <label for="uploadFoto{{ $tugas->id }}" class="text-rose-500 hover:text-rose-600 transition cursor-pointer" title="Upload/Ganti Foto">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12v8m0-8l-3-3m3 3l3-3M12 4v8"/>
-                                        </svg>
-                                    </label>
-                                    <button type="submit" class="text-green-500 hover:text-green-600 transition" title="Simpan">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </button>
-                                </form>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Uploaded
+            </div>
+        @else
+            <div class="flex items-center gap-1 px-2 py-1
+                        rounded-full bg-rose-100 text-rose-700
+                        text-[11px] font-semibold shadow-sm whitespace-nowrap">
 
-                            </div>
-                        </td>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                Belum
+            </div>
+        @endif
+
+        {{-- LIHAT FOTO --}}
+        @if($fotoExists)
+            <a href="/storage/{{ $tugas->bukti_foto }}"
+               target="_blank"
+               title="Lihat Foto"
+               class="flex items-center justify-center
+                      w-9 h-9 rounded-xl
+                      bg-blue-100 hover:bg-blue-200
+                      text-blue-600 shadow-sm
+                      transition-all duration-200 hover:scale-105">
+
+                <i class="fa-solid fa-eye"></i>
+            </a>
+        @endif
+
+        {{-- FORM --}}
+        <form action="{{ route('mekanik.tugas-tetap.upload', $tugas->id) }}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="flex items-center gap-2">
+            @csrf
+
+            <input type="file"
+                   name="bukti_foto"
+                   accept="image/*"
+                   class="hidden"
+                   id="uploadFoto{{ $tugas->id }}">
+
+            {{-- UPLOAD --}}
+            <label for="uploadFoto{{ $tugas->id }}"
+                   title="Upload Foto"
+                   class="flex items-center justify-center
+                          w-9 h-9 rounded-xl
+                          bg-amber-100 hover:bg-amber-200
+                          text-amber-600 shadow-sm
+                          cursor-pointer transition-all duration-200 hover:scale-105">
+
+                <i class="fa-solid fa-upload"></i>
+            </label>
+
+            {{-- SIMPAN --}}
+            <button type="submit"
+                    title="Simpan"
+                    class="flex items-center justify-center
+                           w-9 h-9 rounded-xl
+                           bg-emerald-100 hover:bg-emerald-200
+                           text-emerald-600 shadow-sm
+                           transition-all duration-200 hover:scale-105">
+
+                <i class="fa-solid fa-check"></i>
+            </button>
+
+        </form>
+
+    </div>
+</td>
                     </tr>
                 @empty
                     <tr>

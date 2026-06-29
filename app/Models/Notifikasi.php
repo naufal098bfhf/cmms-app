@@ -14,6 +14,11 @@ class Notifikasi extends Model
         'pesan',
         'link',
         'read',
+        'tugas_id',
+    ];
+
+    protected $casts = [
+        'read' => 'boolean',
     ];
 
     // Relasi ke user

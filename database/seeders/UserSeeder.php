@@ -37,6 +37,14 @@ class UserSeeder extends Seeder
             'department' => 'Maintenance', // optional
             'is_active' => 1,
         ]);
-
+        // Owner default
+User::create([
+    'name'       => 'Owner',
+    'email'      => 'owner@gmail.com',
+    'password'   => Hash::make('owner123'),
+    'role'       => 'owner',
+    'department' => 'Management',
+    'is_active'  => 1,
+]);
     }
 }

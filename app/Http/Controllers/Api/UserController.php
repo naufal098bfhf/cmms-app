@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -42,20 +43,85 @@ public function store(Request $request)
     return response()->json($user, 201);
 }
 
-    // 🔥 UPDATE
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'department' => $request->department,
-        ]);
+    $request->validate([
+        'name'       => 'required|string|max:255',
+        'email'      => 'required|email',
+        'role'       => 'required',
+        'department' => 'nullable|string|max:255',
+        'photo'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
-        return response()->json($user);
+    $data = [
+        'name'       => $request->name,
+        'email'      => $request->email,
+        'role'       => $request->role,
+        'department' => $request->department,
+        'is_active'  => (int) $request->is_active,
+    ];
+
+    // ==========================
+    // PASSWORD
+    // ==========================
+
+    if (!empty($request->password)) {
+
+        $data['password'] =
+            Hash::make(
+                $request->password
+            );
     }
+
+    // ==========================
+    // FOTO
+    // ==========================
+
+    if (
+        $request->hasFile('photo') &&
+        $request->file('photo')->isValid()
+    ) {
+
+        // hapus foto lama
+
+        if (
+            $user->photo &&
+            Storage::disk('public')
+                ->exists($user->photo)
+        ) {
+
+            Storage::disk('public')
+                ->delete($user->photo);
+        }
+
+        // simpan foto baru
+
+        $pathPhoto =
+            $request
+                ->file('photo')
+                ->store(
+                    'photos',
+                    'public'
+                );
+
+        $data['photo'] =
+            $pathPhoto;
+    }
+
+    // ==========================
+    // UPDATE USER
+    // ==========================
+
+    $user->update($data);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'User berhasil diperbarui',
+        'data'    => $user->fresh(),
+    ]);
+}
 
     // 🔥 DELETE
     public function destroy($id)

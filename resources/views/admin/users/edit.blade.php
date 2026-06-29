@@ -102,7 +102,7 @@
 
         <div class="flex items-center gap-6">
             <img id="previewFoto"
-                src="{{ $user->photo ? asset('storage/'.$user->photo) : asset('images/default_user.jpeg') }}"
+                src="{{ $user->photo ? '/storage/'.$user->photo : '/images/default_user.jpeg' }}"
                 class="w-28 h-28 rounded-xl object-cover border shadow-sm">
 
             <div class="flex-1">

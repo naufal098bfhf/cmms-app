@@ -6,6 +6,9 @@
     <title>POLITEKNIK PETROKIMIA BANTEN</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo2.png') }}">
 
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
@@ -32,7 +35,7 @@
 
         <!-- Logo -->
         <div class="p-4 text-center border-b border-red-500">
-            <img src="{{ asset('images/logo2.png') }}" class="mx-auto w-16 mb-2" alt="Logo">
+            <img src="/images/logo2.png" class="mx-auto w-16 mb-2" alt="Logo">
             <h1 class="text-lg font-bold leading-tight">
                 POLITEKNIK INDUSTRI<br>PETROKIMIA BANTEN
             </h1>

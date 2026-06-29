@@ -82,7 +82,7 @@
                                     'selesai'       => 'Selesai',
                                 ];
                             @endphp
-                            <span class="px-2 py-1 rounded-lg text-white {{ $statusColors[$tugas->status] ?? 'bg-gray-400' }}">
+                            <span class="px-2 py-1 text-sm rounded-lg text-white whitespace-nowrap {{ $statusColors[$tugas->status] ?? 'bg-gray-400' }}">
                                 {{ $statusLabels[$tugas->status] ?? ucfirst($tugas->status) }}
                             </span>
                         </td>

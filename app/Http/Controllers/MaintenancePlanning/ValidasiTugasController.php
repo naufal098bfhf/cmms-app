@@ -66,4 +66,52 @@ public function validasiDarurat($id)
     return redirect()->route('maintenance-planning.kelola-tugas.tugas-darurat.index')
                      ->with('success', 'Tugas darurat berhasil divalidasi.');
 }
+public function getValidasi()
+{
+    $tetap = TugasTetap::with('mekanik')
+        ->where('status', 'selesai')
+        ->where('validasi_mp', false)
+        ->get();
+
+    $darurat = TugasDarurat::with('mekanik')
+        ->where('status', 'selesai')
+        ->where('validasi_mp', false)
+        ->get();
+
+    return response()->json([
+        'tetap' => $tetap,
+        'darurat' => $darurat,
+    ]);
+}
+public function validasiTetapApi($id)
+{
+    $tugas = TugasTetap::findOrFail($id);
+
+    $tugas->validasi_mp = true;
+    $tugas->status = 'selesai';
+
+    $tugas->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Tugas tetap berhasil divalidasi',
+        'data' => $tugas
+    ]);
+}
+
+public function validasiDaruratApi($id)
+{
+    $tugas = TugasDarurat::findOrFail($id);
+
+    $tugas->validasi_mp = true;
+    $tugas->status = 'selesai';
+
+    $tugas->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Tugas darurat berhasil divalidasi',
+        'data' => $tugas
+    ]);
+}
 }

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -98,16 +99,32 @@ class UserController extends Controller
     }
 
     // ================= FOTO (KODE ASLI) =================
-    if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+    if ($request->hasFile('photo') &&
+    $request->file('photo')->isValid()) {
 
-        if ($user->photo && Storage::disk('public')->exists($user->photo)) {
-            Storage::disk('public')->delete($user->photo);
-        }
+    if ($user->photo &&
+        Storage::disk('public')
+            ->exists($user->photo)) {
 
-        $data['photo'] = $request->file('photo')->store('photos', 'public');
+        Storage::disk('public')
+            ->delete($user->photo);
     }
 
-    $user->update($data);
+    $data['photo'] =
+        $request->file('photo')
+            ->store(
+                'photos',
+                'public'
+            );
+}
+
+Log::info([
+    'HAS FILE' => $request->hasFile('photo'),
+    'PHOTO FILE' => $request->file('photo'),
+    'DATA' => $request->all(),
+]);
+
+$user->update($data);
 
     return redirect()->route('admin.users.index')
                      ->with('success', 'User berhasil diperbarui!');

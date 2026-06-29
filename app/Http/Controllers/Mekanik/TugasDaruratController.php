@@ -14,11 +14,40 @@ class TugasDaruratController extends Controller
 {
     public function index()
     {
-        $tugas = TugasDarurat::where('mekanik_id', Auth::user()->id)
-            ->where('tgl_mulai', '<', Carbon::today())
-            ->latest()
-            ->get();
+$today = Carbon::today();
 
+$tugas = TugasDarurat::where('mekanik_id', Auth::id())
+
+    // tugas mulai hari ini atau masih aktif
+
+    /*
+    |--------------------------------------------------------------------------
+    | HANYA TUGAS HARI INI
+    |--------------------------------------------------------------------------
+    */
+   ->whereDate('tgl_mulai', '<=', $today)
+
+    ->latest()
+    ->get();
+  foreach ($tugas as $item) {
+
+    $sudahNotif = Notifikasi::where('user_id', Auth::id())
+        ->whereDate('created_at', Carbon::today())
+        ->where('tugas_id', $item->id)
+        ->exists();
+
+    if (!$sudahNotif) {
+
+       Notifikasi::create([
+            'user_id' => $item->mekanik_id,
+            'tugas_id' => $item->id,
+            'type' => 'tugas_darurat',
+            'pesan' => "📋 Tugas Darurat ID {$item->id} aktif hari ini.",
+            'link' => '/maintenance-planning/kelola-tugas/tugas-darurat/' . $item->id,
+            'read' => false,
+        ]);
+    }
+}
         // Warning otomatis jika deadline terlewati
         foreach ($tugas as $item) {
             if ($item->status === 'selesai') continue;
@@ -32,14 +61,14 @@ class TugasDaruratController extends Controller
 
                 $sudahAda = Notifikasi::where('user_id', Auth::id())
                     ->whereDate('created_at', Carbon::today())
-                    ->where('pesan', 'like', "%Tugas Darurat ID {$item->id}%")
+                    ->where('tugas_id', $item->id)
                     ->exists();
 
                 if (!$sudahAda) {
                     Notifikasi::create([
                         'user_id'  => Auth::id(),
                         'pesan'    => "⚠️ Warning: Tugas Darurat ID {$item->id} terlambat {$daysLate} hari dari batas waktu!",
-                        'link'     => route('mekanik.kelola-tugas.tugas-darurat.show', $item->id),
+                        'link' => route('mekanik.tugas-darurat.show', $item->id),
                         'read'     => false,
                         'tugas_id' => $item->id,
                     ]);
@@ -134,4 +163,179 @@ class TugasDaruratController extends Controller
 
         return redirect()->back()->with('success', 'Bukti foto berhasil diupload.');
     }
+public function apiIndex(Request $request)
+{
+    try {
+
+        $user = $request->user();
+
+        if (!$user) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Token tidak valid'
+            ], 401);
+        }
+
+        $tugas = TugasDarurat::where(
+            'mekanik_id',
+            $user->id
+        )
+        ->latest()
+        ->get();
+
+        return response()->json($tugas);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile(),
+        ], 500);
+    }
 }
+public function apiUpdateStatus(Request $request, $id)
+{
+    $tugas = TugasDarurat::where('id', $id)
+        ->where('mekanik_id', auth()->id())
+        ->firstOrFail();
+
+    // =====================================
+    // STATUS VALID
+    // =====================================
+
+    $validNext = [
+
+        'pending' => ['dikerjakan'],
+
+        'dikerjakan' => ['selesai'],
+
+        'selesai' => [],
+    ];
+
+    $newStatus = $request->status;
+
+    if ($newStatus === 'release_order') {
+
+        $newStatus = 'pending';
+    }
+
+    if (!in_array(
+        $newStatus,
+        $validNext[$tugas->status]
+    )) {
+
+        return response()->json([
+
+            'success' => false,
+
+            'message' => 'Status tidak valid'
+        ], 400);
+    }
+
+    // =====================================
+    // UPDATE STATUS
+    // =====================================
+
+    $tugas->status = $newStatus;
+
+    // =====================================
+    // JIKA SELESAI
+    // =====================================
+
+    if ($newStatus === 'selesai') {
+
+        // menunggu validasi MP
+
+        $tugas->validasi_mp = false;
+
+        $tugas->save();
+
+        // =====================================
+        // HAPUS NOTIFIKASI LAMA
+        // =====================================
+
+        Notifikasi::where(
+            'tugas_id',
+            $tugas->id
+        )->delete();
+
+        // =====================================
+        // KIRIM NOTIFIKASI KE MP
+        // =====================================
+
+        $mpUsers = \App\Models\User::where(
+            'role',
+            'maintenance-planning'
+        )->get();
+
+        foreach ($mpUsers as $user) {
+
+            Notifikasi::create([
+
+                'user_id' => $user->id,
+
+                'pesan' =>
+                    "Tugas ID {$tugas->id} dari {$tugas->nama_mekanik} menunggu validasi.",
+
+                'link' =>
+                    '/maintenance-planning/kelola-tugas/tugas-darurat/' . $tugas->id,
+
+                'read' => false,
+
+                'tugas_id' => $tugas->id,
+            ]);
+        }
+
+        return response()->json([
+
+            'success' => true,
+
+            'message' =>
+                'Status selesai. Menunggu validasi Maintenance Planning.',
+
+            'status_label' =>
+                'Menunggu Validasi MP'
+        ]);
+    }
+
+    // =====================================
+    // SAVE NORMAL
+    // =====================================
+
+    $tugas->save();
+
+    return response()->json([
+
+        'success' => true,
+
+        'message' => 'Status berhasil diupdate'
+    ]);
+}
+
+public function apiUploadFoto(Request $request, $id)
+{
+    $user = $request->user();
+
+    $tugas = TugasDarurat::where('id', $id)
+        ->where('mekanik_id', $user->id)
+        ->firstOrFail();
+
+    if ($request->hasFile('bukti_foto')) {
+
+        $path = $request->file('bukti_foto')
+            ->store('tugas-darurat', 'public');
+
+        $tugas->bukti_foto = $path;
+        $tugas->save();
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Foto berhasil diupload'
+    ]);
+}
+}
+

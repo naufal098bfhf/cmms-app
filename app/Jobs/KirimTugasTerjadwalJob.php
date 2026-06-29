@@ -33,7 +33,7 @@ class KirimTugasTerjadwalJob implements ShouldQueue
         if ($mekanik) {
             $mekanik->notify(new TugasBaruNotification($tugas, $this->jenis));
         }
+        $tugas->update(['status' => 'pending']);
 
-        $tugas->update(['status' => 'dikirim']);
     }
 }

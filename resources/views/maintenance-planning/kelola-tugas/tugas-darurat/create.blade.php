@@ -107,9 +107,14 @@
             {{-- EQ Class --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">EQ Class</label>
-                <input type="text" name="eq_class" id="eq_class" readonly
-                       class="w-full rounded-lg border border-gray-300 bg-gray-100
-                              px-4 py-2.5">
+                <input type="text"
+       name="eq_class"
+       id="eq_class"
+       value="{{ old('eq_class') }}"
+       class="w-full rounded-lg border border-gray-300 bg-gray-50
+              focus:bg-white focus:border-red-500
+              focus:ring focus:ring-red-200
+              px-4 py-2.5">
             </div>
         </div>
 

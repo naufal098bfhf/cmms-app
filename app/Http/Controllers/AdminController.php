@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Equipment;
+use App\Models\Equipment;   
 use App\Models\TugasDarurat;
 use App\Models\TugasTetap;
 

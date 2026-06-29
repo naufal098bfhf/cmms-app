@@ -29,11 +29,13 @@ class TugasTetap extends Model
         'lokasi',
         'status',           // pending | dikerjakan | selesai
         'bukti_foto',
+         'validasi_mp',
     ];
 
     protected $casts = [
         'tanggal_mulai'   => 'date',
         'tanggal_tahunan' => 'date',
+        'validasi_mp'     => 'boolean',
     ];
 
     /* ==========================

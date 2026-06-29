@@ -13,9 +13,15 @@
         @if(!empty($tugas->bukti_foto))
             <div class="mt-2">
                 <p class="font-medium">Foto Bukti:</p>
-                <a href="{{ asset('storage/' . $tugas->bukti_foto) }}" target="_blank">
-                    <img src="{{ asset('storage/' . $tugas->bukti_foto) }}" alt="Bukti Foto" class="mt-1 rounded-lg border border-gray-300 max-w-xs">
-                </a>
+<a href="{{ url('storage/' . $tugas->bukti_foto) }}"
+   target="_blank">
+
+    <img src="{{ url('storage/' . $tugas->bukti_foto) }}"
+         alt="Bukti Foto"
+         class="mt-2 rounded-xl border border-gray-300
+                shadow-md hover:shadow-xl
+                transition duration-300
+                max-w-sm cursor-pointer hover:scale-105"></a>
                 <p class="text-sm text-gray-500 mt-1">Klik gambar untuk memperbesar.</p>
             </div>
         @else

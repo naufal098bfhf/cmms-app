@@ -5,20 +5,15 @@
     <h2 class="text-2xl font-bold text-gray-700 mb-6">Detail User</h2>
 <div class="flex flex-col md:flex-row items-start gap-8">
   {{-- Foto user --}}
-<div class="flex-shrink-0">
-    @if(!empty($user->photo) && file_exists(public_path('storage/' . $user->photo)))
-        {{-- ✅ Foto dari storage --}}
-        <img src="{{ asset('storage/' . $user->photo) }}"
-             alt="Foto {{ $user->name }}"
-             class="w-40 h-40 rounded-xl object-cover shadow-md border">
-    @else
-        {{-- ✅ Foto default --}}
-        <img src="{{ asset('images/default-user.png') }}"
-             alt="Foto Default"
-             class="w-40 h-40 rounded-xl object-cover shadow-md border">
-    @endif
-</div>
-
+@if(!empty($user->photo))
+    <img src="/storage/{{ $user->photo }}"
+         alt="Foto {{ $user->name }}"
+         class="w-40 h-40 rounded-xl object-cover shadow-md border">
+@else
+    <img src="/images/default-user.png"
+         alt="Foto Default"
+         class="w-40 h-40 rounded-xl object-cover shadow-md border">
+@endif
 
         {{-- Data user --}}
         <div class="flex-1">
