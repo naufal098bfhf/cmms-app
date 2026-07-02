@@ -7,6 +7,7 @@ use App\Models\TugasTetap;
 use App\Models\Equipment;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Notifikasi;
 
 // Statistik
 $jumlahEquipment = Equipment::count();

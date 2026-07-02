@@ -30,6 +30,8 @@ class TugasTetap extends Model
         'status',           // pending | dikerjakan | selesai
         'bukti_foto',
          'validasi_mp',
+         'is_template',
+         'last_sent',
     ];
 
     protected $casts = [

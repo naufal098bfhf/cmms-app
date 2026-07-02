@@ -211,6 +211,33 @@
     // ======================================================
     // 🔥 TUGAS DARURAT ADMIN
     // ======================================================
+    Route::put('/tugas-darurat/{id}', function (Request $request, $id) {
+
+    $tugas = TugasDarurat::findOrFail($id);
+
+    $tugas->update([
+
+        'tgl_mulai'     => $request->tgl_mulai,
+        'tgl_selesai'   => $request->tgl_selesai,
+        'mekanik_id'    => $request->mekanik_id,
+        'nama_mekanik'  => $request->nama_mekanik,
+        'equipment_id'  => $request->equipment_id,
+        'equipment'     => $request->equipment,
+        'tag_number'    => $request->tag_number,
+        'eq_class'      => $request->eq_class,
+        'bom'           => $request->bom,
+        'task_list'     => $request->task_list,
+        'lokasi'        => $request->lokasi,
+        'status'        => $request->status,
+
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Tugas berhasil diperbarui',
+        'data'    => $tugas,
+    ]);
+});
 
     Route::post('/tugas-darurat', function (Request $request) {
 

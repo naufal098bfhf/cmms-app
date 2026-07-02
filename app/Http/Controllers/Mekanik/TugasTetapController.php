@@ -15,155 +15,17 @@ class TugasTetapController extends Controller
 {
     // Halaman daftar tugas tetap milik mekanik login
     public function index()
-    {
-$today = Carbon::today();
+{
+    $today = Carbon::today();
 
-$tugasTetap = TugasTetap::where('mekanik_id', Auth::id())
+    // WAJIB TAMBAHKAN INI
+    $this->generateTugasHariIni();
 
-    // hanya tugas aktif
-    ->where(function ($query) use ($today) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | HARIAN
-        |--------------------------------------------------------------------------
-        */
-        $query->where('jenis_tugas', 'harian');
-
-        /*
-        |--------------------------------------------------------------------------
-        | MINGGUAN
-        |--------------------------------------------------------------------------
-        */
-        $query->orWhere(function ($q) use ($today) {
-
-            $mappingHari = [
-                'monday' => 'senin',
-                'tuesday' => 'selasa',
-                'wednesday' => 'rabu',
-                'thursday' => 'kamis',
-                'friday' => 'jumat',
-                'saturday' => 'sabtu',
-                'sunday' => 'minggu',
-            ];
-
-            $hariIndonesia = $mappingHari[strtolower($today->format('l'))];
-
-            $q->where('jenis_tugas', 'mingguan')
-              ->whereRaw('LOWER(hari_mingguan) = ?', [$hariIndonesia]);
-        });
-
-        /*
-        |--------------------------------------------------------------------------
-        | BULANAN
-        |--------------------------------------------------------------------------
-        */
-        $query->orWhere(function ($q) use ($today) {
-
-            $q->where('jenis_tugas', 'bulanan')
-              ->whereDay('tanggal_bulanan', $today->day);
-        });
-
-        /*
-        |--------------------------------------------------------------------------
-        | TAHUNAN
-        |--------------------------------------------------------------------------
-        */
-        $query->orWhere(function ($q) use ($today) {
-
-            $q->where('jenis_tugas', 'tahunan')
-              ->whereMonth('tanggal_tahunan', $today->month)
-              ->whereDay('tanggal_tahunan', $today->day);
-        });
-
-    })
-
-    ->latest()
-    ->get();
-
-
-/*
-|--------------------------------------------------------------------------
-| RESET STATUS OTOMATIS AGAR MUNCUL LAGI
-|--------------------------------------------------------------------------
-*/
-
-foreach ($tugasTetap as $tugas) {
-
-    // jika tugas selesai tetapi sudah masuk jadwal baru
-    if ($tugas->status === 'selesai') {
-
-        $lastUpdate = Carbon::parse($tugas->updated_at);
-
-        $reset = false;
-
-        switch ($tugas->jenis_tugas) {
-
-            case 'harian':
-                $reset = !$lastUpdate->isToday();
-                break;
-
-            case 'mingguan':
-                $reset = $lastUpdate->startOfWeek() != $today->copy()->startOfWeek();
-                break;
-
-            case 'bulanan':
-                $reset = $lastUpdate->month != $today->month
-                      || $lastUpdate->year != $today->year;
-                break;
-
-            case 'tahunan':
-                $reset = $lastUpdate->year != $today->year;
-                break;
-        }
-
-        if ($reset) {
-
-            $tugas->status = 'pending';
-            $tugas->validasi_mp = 0;
-            $tugas->save();
-        }
-        if ($reset) {
-
-    // reset status tugas
-    $tugas->status = 'pending';
-    $tugas->validasi_mp = 0;
-    $tugas->save();
-
-    /*
-    |--------------------------------------------------------------------------
-    | CEK NOTIFIKASI HARI INI
-    |--------------------------------------------------------------------------
-    */
-
-    $sudahNotif = Notifikasi::where('user_id', $tugas->mekanik_id)
-        ->whereDate('created_at', Carbon::today())
-        ->where('pesan', 'like', "%Tugas Tetap ID {$tugas->id}%")
-        ->exists();
-
-    /*
-    |--------------------------------------------------------------------------
-    | KIRIM NOTIFIKASI BARU
-    |--------------------------------------------------------------------------
-    */
-
-    if (!$sudahNotif) {
-
-        Notifikasi::create([
-            'user_id' => $tugas->mekanik_id,
-
-            'pesan' =>
-                "📋 Tugas Tetap ID {$tugas->id} kembali aktif hari ini.",
-
-            'link' =>
-                route('mekanik.kelola-tugas.tetap.show', $tugas->id),
-
-            'read' => false,
-        ]);
-    }
-}
-    }
-}
+    $tugasTetap = TugasTetap::where('mekanik_id', Auth::id())
+        ->where('is_template', 0)
+        ->whereDate('tanggal_mulai', $today)
+        ->latest()
+        ->get();
 
         // ================================
         // 🔥 FITUR WARNING OTOMATIS PER HARI
@@ -214,8 +76,9 @@ foreach ($tugasTetap as $tugas) {
     public function show($id)
     {
         $tugas = TugasTetap::where('mekanik_id', Auth::user()->id)
-            ->where('id', $id)
-            ->firstOrFail();
+    ->where('is_template', false)
+    ->where('id', $id)
+    ->firstOrFail();
 
         return view('mekanik.kelola-tugas.tetap.show', compact('tugas'));
     }
@@ -223,9 +86,10 @@ foreach ($tugasTetap as $tugas) {
     // Update status tugas tetap
     public function updateStatus(Request $request, $id)
     {
-        $tugas = TugasTetap::where('id', $id)
-            ->where('mekanik_id', Auth::id())
-            ->firstOrFail();
+       $tugas = TugasTetap::where('id', $id)
+    ->where('mekanik_id', Auth::id())
+    ->where('is_template', false)
+    ->firstOrFail();
 
         $validNext = [
             'pending' => ['dikerjakan'],
@@ -270,8 +134,9 @@ foreach ($tugasTetap as $tugas) {
     public function uploadBuktiFoto(Request $request, $id)
     {
         $tugas = TugasTetap::where('mekanik_id', Auth::user()->id)
-            ->where('id', $id)
-            ->firstOrFail();
+    ->where('is_template', false)
+    ->where('id', $id)
+    ->firstOrFail();
 
         $request->validate([
             'bukti_foto' => 'required|image|max:5120',
@@ -293,7 +158,10 @@ foreach ($tugasTetap as $tugas) {
     $id
 )
 {
-    $tugas = TugasTetap::findOrFail($id);
+    $tugas = TugasTetap::where('id', $id)
+    ->where('mekanik_id', Auth::id())
+    ->where('is_template', false)
+    ->firstOrFail();
 
     $tugas->status =
         $request->status;
@@ -316,8 +184,7 @@ foreach ($tugasTetap as $tugas) {
         Notifikasi::create([
             'user_id' => $m->id,
 
-            'pesan' =>
-                "Tugas Tetap ID {$tugas->id} menunggu validasi MP",
+            'pesan'=>'Tugas tetap baru diberikan kepada Anda',
 
             'link' =>
                 '/maintenance/tugas-tetap',
@@ -338,15 +205,14 @@ foreach ($tugasTetap as $tugas) {
 }
 public function apiIndex()
 {
+    $this->generateTugasHariIni();
     try {
 
-        $tugas = TugasTetap::where(
-            'mekanik_id',
-            Auth::id()
-        )
-        ->latest()
-        ->get();
-
+      $tugas = TugasTetap::where('mekanik_id', Auth::id())
+    ->where('is_template', false)
+    ->whereDate('tanggal_mulai', Carbon::today())
+    ->latest()
+    ->get();
         return response()->json(
             $tugas,
             200
@@ -366,7 +232,10 @@ public function apiUploadFoto(
     $id
 )
 {
-    $tugas = TugasTetap::findOrFail($id);
+    $tugas = TugasTetap::where('id', $id)
+    ->where('mekanik_id', Auth::id())
+    ->where('is_template', false)
+    ->firstOrFail();
 
     $request->validate([
         'foto' => 'required|image|max:5120'
@@ -386,5 +255,149 @@ public function apiUploadFoto(
         'success' => true,
         'foto' => $path
     ]);
+}
+private function generateTugasHariIni()
+{
+
+    $today = Carbon::today();
+
+    $hariMap = [
+        'Monday' => 'senin',
+        'Tuesday' => 'selasa',
+        'Wednesday' => 'rabu',
+        'Thursday' => 'kamis',
+        'Friday' => 'jumat',
+        'Saturday' => 'sabtu',
+        'Sunday' => 'minggu',
+    ];
+
+    $hariIni = $hariMap[$today->format('l')];
+
+   $templates = TugasTetap::where('is_template',1)
+    ->where('mekanik_id',Auth::id())
+    ->get();
+
+        logger()->info('JUMLAH TEMPLATE',[
+    'jumlah'=>$templates->count()
+]);
+
+    foreach($templates as $tugas){
+
+    logger()->info('TEMPLATE',[
+    'id'=>$tugas->id,
+    'jenis'=>$tugas->jenis_tugas,
+    'tanggal'=>$tugas->tanggal_tahunan,
+]);
+
+        $kirim=false;
+
+       if(
+    $tugas->jenis_tugas=="mingguan" &&
+    strtolower(trim($tugas->hari_mingguan))
+    ==
+    strtolower(trim($hariIni))
+)
+{
+    $kirim=true;
+}
+
+       if(
+    $tugas->jenis_tugas=="bulanan" &&
+    (int)$tugas->tanggal_bulanan==(int)$today->day
+)
+{
+    $kirim=true;
+}
+
+      if (
+    $tugas->jenis_tugas == "tahunan" &&
+    !empty($tugas->tanggal_tahunan)
+) {
+
+    $tanggal = Carbon::parse($tugas->tanggal_tahunan);
+
+    if (
+        $tanggal->month == $today->month &&
+        $tanggal->day == $today->day
+    ) {
+        $kirim = true;
+    }
+        }
+
+        if(!$kirim){
+            continue;
+        }
+
+       $sudahAda = TugasTetap::where('is_template', 0)
+    ->where('mekanik_id', $tugas->mekanik_id)
+    ->where('equipment_id', $tugas->equipment_id)
+    ->where('jenis_tugas', $tugas->jenis_tugas)
+    ->whereDate('tanggal_mulai', $today)
+    ->exists();
+
+
+        if($sudahAda){
+
+    logger()->info('SUDAH ADA TUGAS',[
+        'mekanik'=>$tugas->mekanik_id,
+        'equipment'=>$tugas->equipment_id
+    ]);
+
+   if ($sudahAda) {
+
+    logger()->info('SUDAH ADA TUGAS',[
+        'mekanik'=>$tugas->mekanik_id,
+        'equipment'=>$tugas->equipment_id
+    ]);
+}
+
+    continue;
+}
+
+        $tugasBaru = TugasTetap::create([
+
+            'pemberi_tugas'=>$tugas->pemberi_tugas,
+            'mekanik_id'=>$tugas->mekanik_id,
+            'nama_mekanik'=>$tugas->nama_mekanik,
+
+            'equipment_id'=>$tugas->equipment_id,
+            'equipment'=>$tugas->equipment,
+            'tag_number'=>$tugas->tag_number,
+
+            'jenis_tugas'=>$tugas->jenis_tugas,
+
+            'hari_mingguan'=>$tugas->hari_mingguan,
+            'tanggal_bulanan'=>$tugas->tanggal_bulanan,
+            'tanggal_tahunan'=>$tugas->tanggal_tahunan,
+
+            'tanggal_mulai'=>$today,
+
+            'eq_class'=>$tugas->eq_class,
+            'bom'=>$tugas->bom,
+            'task_list'=>$tugas->task_list,
+            'lokasi'=>$tugas->lokasi,
+
+            'status'=>'pending',
+            'validasi_mp'=>false,
+            'is_template'=>0,
+        ]);
+        logger()->info('BERHASIL MEMBUAT TUGAS',[
+    'id'=>$tugasBaru->id,
+    'mekanik'=>$tugasBaru->mekanik_id,
+]);
+Notifikasi::create([
+
+    'user_id'=>$tugasBaru->mekanik_id,
+
+    'pesan'=>'Tugas tetap baru diberikan kepada Anda',
+
+    'link' => '/mekanik/kelola-tugas/tetap/'.$tugasBaru->id,
+
+    'tugas_id'=>$tugasBaru->id,
+
+    'read'=>false,
+
+]);
+    }
 }
 }

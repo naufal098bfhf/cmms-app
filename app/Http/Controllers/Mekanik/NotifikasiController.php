@@ -19,5 +19,5 @@ class NotifikasiController extends Controller
         // Kembali ke halaman sebelumnya dengan pesan sukses
         return redirect()->back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca.');
     }
-    
+
 }

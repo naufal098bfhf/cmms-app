@@ -34,57 +34,126 @@ class Kernel extends ConsoleKernel
             ];
             $hariIni = $hariMap[$today->format('l')];
 
-            $tugasList = TugasTetap::where('status', 'pending')
-                ->whereBetween('tanggal_mulai', [$startOfDay, $endOfDay])
-                ->get();
+           $tugasList = TugasTetap::where('is_template', 1)->get();
 
             foreach ($tugasList as $tugas) {
 
-                $kirim = false;
+    if (
+        $tugas->last_sent &&
+        Carbon::parse($tugas->last_sent)->isToday()
+    ) {
+        continue;
+    }
 
-                // Cek jadwal
-                if ($tugas->jenis_tugas === 'mingguan' && $tugas->hari_mingguan === $hariIni) {
-                    $kirim = true;
-                }
+    $kirim = false;
 
-                if ($tugas->jenis_tugas === 'bulanan' && (int) $tugas->tanggal_bulanan === $today->day) {
-                    $kirim = true;
-                }
+    // =====================
+    // MINGGUAN
+    // =====================
+   if (
+    $tugas->jenis_tugas == 'mingguan' &&
+    strtolower(trim($tugas->hari_mingguan)) == strtolower(trim($hariIni))
+) {
+    $kirim = true;
+}
 
-                if ($tugas->jenis_tugas === 'tahunan' && Carbon::parse($tugas->tanggal_tahunan)->isSameDay($today)) {
-                    $kirim = true;
-                }
+    // =====================
+    // BULANAN
+    // =====================
+ if (
+    $tugas->jenis_tugas == 'bulanan' &&
+    !empty($tugas->tanggal_bulanan) &&
+    (int)$tugas->tanggal_bulanan === (int)$today->day
+) {
+    $kirim = true;
+}
 
-                if ($kirim) {
-                    // Simpan notifikasi + data tugas
-                    Notifikasi::create([
-                        'user_id' => $tugas->mekanik_id,
-                        'pesan'   => "Release Order: {$tugas->task_list}",
-                        'link'    => '/mekanik/tugas-tetap/' . $tugas->id,
-                        'read'    => false,
-                        'data'    => json_encode([
-                            'task_list' => $tugas->task_list,
-                            'tgl_mulai' => $tugas->tanggal_mulai,
-                            'tgl_selesai'=> $tugas->tanggal_selesai,
-                            'jenis_tugas'=> $tugas->jenis_tugas,
-                            'equipment' => $tugas->equipment ?? null,
-                            'tag_number'=> $tugas->tag_number ?? null,
-                            'catatan'   => $tugas->catatan ?? null,
-                        ])
-                    ]);
+    // =====================
+    // TAHUNAN
+    // =====================
+   if (
+    $tugas->jenis_tugas == 'tahunan' &&
+    !empty($tugas->tanggal_tahunan) &&
+    Carbon::parse($tugas->tanggal_tahunan)->isSameDay($today)
+) {
+    $kirim = true;
+}
 
-                    // Update status menjadi release order
-                    $tugas->update(['status' => 'release order']);
-                }
-            }
+    if (!$kirim) {
+        continue;
+    }
+    $sudahAda = TugasTetap::where('is_template', 0)
+    ->where('mekanik_id', $tugas->mekanik_id)
+    ->where('equipment_id', $tugas->equipment_id)
+    ->whereDate('tanggal_mulai', $today)
+    ->exists();
 
-        })->dailyAt('07:00'); // dijalankan setiap hari jam 07:00
+if ($sudahAda) {
+    continue;
+}
+logger()->info('MEMBUAT TUGAS', [
+    'id' => $tugas->id,
+    'jenis' => $tugas->jenis_tugas,
+    'mekanik' => $tugas->mekanik_id,
+]);
+$tugasBaru = TugasTetap::create([
+
+    'pemberi_tugas'   => $tugas->pemberi_tugas,
+    'mekanik_id'      => $tugas->mekanik_id,
+    'nama_mekanik'    => $tugas->nama_mekanik,
+
+    'equipment_id'    => $tugas->equipment_id,
+    'equipment'       => $tugas->equipment,
+    'tag_number'      => $tugas->tag_number,
+
+    'jenis_tugas'     => $tugas->jenis_tugas,
+
+    'hari_mingguan'   => $tugas->hari_mingguan,
+    'tanggal_bulanan' => $tugas->tanggal_bulanan,
+    'tanggal_tahunan' => $tugas->tanggal_tahunan,
+
+    'tanggal_mulai'   => $today,
+
+    'eq_class'        => $tugas->eq_class,
+    'bom'             => $tugas->bom,
+    'task_list'       => $tugas->task_list,
+    'lokasi'          => $tugas->lokasi,
+
+    'status'          => 'pending',
+
+    'validasi_mp'     => false,
+
+    'is_template' => 0,
+
+'last_sent' => null,
+
+]);
+
+Notifikasi::create([
+
+    'user_id' => $tugas->mekanik_id,
+
+    'pesan'   => "Release Order : {$tugas->task_list}",
+
+    'link' => '/mekanik/tugas-tetap/' . $tugasBaru->id,
+
+    'read'    => false,
+
+]);
+
+$tugas->update([
+    'last_sent' => Carbon::now()
+]);
+}   // tutup foreac
+
+})->dailyAt('07:00');
 
 
-        /* =========================
-         | TUGAS DARURAT TERJADWAL
-         ========================= */
-        $schedule->call(function () {
+/* =========================
+| TUGAS DARURAT TERJADWAL
+========================= */
+
+$schedule->call(function () {
 
             $today = Carbon::today();
             $startOfDay = $today->copy()->startOfDay();

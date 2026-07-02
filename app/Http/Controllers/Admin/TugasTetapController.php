@@ -26,7 +26,7 @@ class TugasTetapController extends Controller
     {
         $hariIni = Carbon::now();
 
-        $tugas = TugasTetap::all();
+        $tugas = TugasTetap::where('is_template', true)->get();
 
         foreach ($tugas as $item) {
 
@@ -47,6 +47,33 @@ class TugasTetapController extends Controller
                 $item->jenis_tugas == 'mingguan' &&
                 strtolower($item->hari_mingguan) == strtolower($hariIni->locale('id')->dayName)
             ) {
+                $sudahAda = TugasTetap::where('mekanik_id', $item->mekanik_id)
+    ->whereDate('tanggal_mulai', $hariIni)
+    ->where('equipment_id', $item->equipment_id)
+    ->where('is_template', false)
+    ->exists();
+
+if (!$sudahAda) {
+
+    $tugasBaru = TugasTetap::create([
+
+        'pemberi_tugas' => $item->pemberi_tugas,
+        'mekanik_id' => $item->mekanik_id,
+        'nama_mekanik' => $item->nama_mekanik,
+        'equipment_id' => $item->equipment_id,
+        'equipment' => $item->equipment,
+        'tag_number' => $item->tag_number,
+        'jenis_tugas' => $item->jenis_tugas,
+        'hari_mingguan' => $item->hari_mingguan,
+        'tanggal_mulai' => $hariIni,
+        'eq_class' => $item->eq_class,
+        'bom' => $item->bom,
+        'task_list' => $item->task_list,
+        'lokasi' => $item->lokasi,
+        'status' => 'pending',
+        'is_template' => false,
+    ]);
+}
                 Notifikasi::create([
                     'user_id' => $item->mekanik_id,
                     'pesan' => "Tugas mingguan: {$item->equipment}",
@@ -68,14 +95,15 @@ class TugasTetapController extends Controller
 
                 // cek duplicate
                 $sudahAda = TugasTetap::where('mekanik_id', $item->mekanik_id)
-                    ->whereDate('tanggal_mulai', $hariIni)
-                    ->where('equipment_id', $item->equipment_id)
-                    ->exists();
+    ->whereDate('tanggal_mulai', $hariIni)
+    ->where('equipment_id', $item->equipment_id)
+    ->where('is_template', false)
+    ->exists();
 
                 if (!$sudahAda) {
 
                     // buat task baru
-                    TugasTetap::create([
+                    $tugasBaru = TugasTetap::create([
                         'pemberi_tugas' => $item->pemberi_tugas,
                         'mekanik_id' => $item->mekanik_id,
                         'nama_mekanik' => $item->nama_mekanik,
@@ -89,6 +117,7 @@ class TugasTetapController extends Controller
                         'task_list' => $item->task_list,
                         'lokasi' => $item->lokasi,
                         'status' => 'pending',
+                        'is_template' => false,
                     ]);
 
                     Notifikasi::create([
@@ -102,28 +131,55 @@ class TugasTetapController extends Controller
                 }
             }
 
-            // =====================
-            // TAHUNAN
-            // =====================
-            if (
-                $item->jenis_tugas == 'tahunan' &&
-                $item->tanggal_tahunan == $hariIni->format('Y-m-d')
-            ) {
-                Notifikasi::create([
-                    'user_id' => $item->mekanik_id,
-                    'pesan' => "Tugas tahunan: {$item->equipment}",
-                    'link' => route('mekanik.tugas-tetap.index'),
-                    'read' => false,
-                ]);
+           // =====================
+// TAHUNAN
+// =====================
+if (
+    $item->jenis_tugas == 'tahunan' &&
+    Carbon::parse($item->tanggal_tahunan)->format('m-d') == $hariIni->format('m-d')
+) {
 
-                $terkirim = true;
-            }
+    // cek apakah tugas tahunan untuk hari ini sudah dibuat
+    $sudahAda = TugasTetap::where('mekanik_id', $item->mekanik_id)
+        ->where('equipment_id', $item->equipment_id)
+        ->whereDate('tanggal_mulai', $hariIni)
+        ->where('is_template', false)
+        ->exists();
 
-            // update last_sent hanya jika kirim
+    if (!$sudahAda) {
+
+        $tugasBaru = TugasTetap::create([
+            'pemberi_tugas'   => $item->pemberi_tugas,
+            'mekanik_id'      => $item->mekanik_id,
+            'nama_mekanik'    => $item->nama_mekanik,
+            'equipment_id'    => $item->equipment_id,
+            'equipment'       => $item->equipment,
+            'tag_number'      => $item->tag_number,
+            'jenis_tugas'     => $item->jenis_tugas,
+            'tanggal_tahunan' => $item->tanggal_tahunan,
+            'tanggal_mulai'   => $hariIni,
+            'eq_class'        => $item->eq_class,
+            'bom'             => $item->bom,
+            'task_list'       => $item->task_list,
+            'lokasi'          => $item->lokasi,
+            'status'          => 'pending',
+            'is_template'     => false,
+        ]);
+
+        Notifikasi::create([
+            'user_id' => $item->mekanik_id,
+            'pesan'   => "Tugas tahunan: {$item->equipment}",
+            'link'    => route('mekanik.tugas-tetap.index'),
+            'read'    => false,
+        ]);
+    }
+
+    $terkirim = true;
+}
+            // Update last_sent jika ada tugas yang dikirim
             if ($terkirim) {
-                $item->update([
-                    'last_sent' => $hariIni->toDateString()
-                ]);
+                $item->last_sent = $hariIni;
+                $item->save();
             }
         }
     }
@@ -133,10 +189,10 @@ class TugasTetapController extends Controller
     // ===============================
     public function index(Request $request)
     {
-        $this->cekDanKirimTugas();
+    $this->cekDanKirimTugas();
 
-        $query = TugasTetap::query()
-            ->where('pemberi_tugas', Auth::user()->name);
+       $query = TugasTetap::query()
+    ->where('pemberi_tugas', Auth::user()->name);
 
         if ($request->status && $request->status !== 'semua') {
             $query->where('status', $request->status);
@@ -184,7 +240,7 @@ class TugasTetapController extends Controller
 
             $mekanik = User::find($mekanikId);
 
-            TugasTetap::create([
+            $tugasBaru = TugasTetap::create([
                 'pemberi_tugas'   => Auth::user()->name,
                 'mekanik_id'      => $mekanikId,
                 'nama_mekanik'    => $mekanik ? $mekanik->name : null,
@@ -200,13 +256,8 @@ class TugasTetapController extends Controller
                 'task_list'       => $validated['task_list'],
                 'lokasi'          => $validated['lokasi'],
                 'status'          => $validated['status'] ?? 'pending',
-            ]);
 
-            Notifikasi::create([
-                'user_id' => $mekanikId,
-                'pesan' => "Tugas baru: {$equipment->name}",
-                'link' => route('mekanik.tugas-tetap.index'),
-                'read' => false,
+                'is_template'     => true,
             ]);
         }
 
@@ -225,7 +276,8 @@ class TugasTetapController extends Controller
 
     public function update(Request $request, $id)
     {
-        $tugas = TugasTetap::findOrFail($id);
+        $tugas = TugasTetap::where('is_template', true)
+    ->findOrFail($id);
 
         $validated = $request->validate([
             'jenis_tugas' => ['required', Rule::in(['mingguan', 'bulanan', 'tahunan'])],
