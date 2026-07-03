@@ -209,3 +209,6 @@ Route::get('/storage/photos/{filename}', function ($filename) {
 Route::get('/cek-user', function () {
     return \App\Models\User::all();
 });
+Route::get('/privacy', function () {
+    return view('privacy');
+});

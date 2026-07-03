@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TugasTetap;
 use App\Models\User;
 use App\Models\Notifikasi;
+use App\Notifications\TugasBaruNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,11 +22,10 @@ class TugasTetapController extends Controller
     // WAJIB TAMBAHKAN INI
     $this->generateTugasHariIni();
 
-    $tugasTetap = TugasTetap::where('mekanik_id', Auth::id())
-        ->where('is_template', 0)
-        ->whereDate('tanggal_mulai', $today)
-        ->latest()
-        ->get();
+   $tugasTetap = TugasTetap::where('mekanik_id', Auth::id())
+    ->where('is_template', false)
+    ->latest('tanggal_mulai')
+    ->get();
 
         // ================================
         // 🔥 FITUR WARNING OTOMATIS PER HARI
@@ -381,23 +381,41 @@ private function generateTugasHariIni()
             'validasi_mp'=>false,
             'is_template'=>0,
         ]);
+        $mekanik = User::find($tugasBaru->mekanik_id);
+
+if ($mekanik) {
+    $mekanik->notify(
+        new \App\Notifications\TugasBaruNotification(
+            $tugasBaru,
+            'tugas_tetap'
+        )
+    );
+}
         logger()->info('BERHASIL MEMBUAT TUGAS',[
     'id'=>$tugasBaru->id,
     'mekanik'=>$tugasBaru->mekanik_id,
 ]);
-Notifikasi::create([
+// Notifikasi hanya dibuat jika hari ini sama dengan tanggal tugas
+if (Carbon::parse($tugasBaru->tanggal_mulai)->isToday()) {
 
-    'user_id'=>$tugasBaru->mekanik_id,
+    $sudahNotif = Notifikasi::where('user_id', $tugasBaru->mekanik_id)
+        ->where('tugas_id', $tugasBaru->id)
+        ->exists();
 
-    'pesan'=>'Tugas tetap baru diberikan kepada Anda',
+    if (!$sudahNotif) {
 
-    'link' => '/mekanik/kelola-tugas/tetap/'.$tugasBaru->id,
-
-    'tugas_id'=>$tugasBaru->id,
-
-    'read'=>false,
-
-]);
+        Notifikasi::create([
+            'user_id'  => $tugasBaru->mekanik_id,
+            'tugas_id' => $tugasBaru->id,
+            'pesan'    => 'Tugas Tetap Baru Diberikan',
+            'link'     => route(
+                'mekanik.kelola-tugas.tetap.show',
+                $tugasBaru->id
+            ),
+            'read'     => false,
+        ]);
+    }
+}
     }
 }
 }

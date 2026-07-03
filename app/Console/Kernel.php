@@ -160,10 +160,9 @@ $schedule->call(function () {
             $endOfDay   = $today->copy()->endOfDay();
 
             // Ambil tugas darurat yang statusnya terjadwal dan tanggal mulai = hari ini
-            $list = TugasDarurat::where('status', 'terjadwal')
-                ->whereBetween('tgl_mulai', [$startOfDay, $endOfDay])
-                ->get();
-
+            $list = TugasDarurat::where('status', 'pending')
+    ->whereBetween('tgl_mulai', [$startOfDay, $endOfDay])
+    ->get();
             foreach ($list as $t) {
 
                 // Simpan notifikasi + data tugas
@@ -182,8 +181,10 @@ $schedule->call(function () {
                     ])
                 ]);
 
-                // Update status menjadi release order
-                $t->update(['status' => 'release order']);
+               // Tandai bahwa notifikasi sudah pernah dikirim
+$t->update([
+    'notifikasi_terkirim' => true
+]);
             }
 
         })->everyMinute(); // cek setiap menit agar tepat tanggal mulai
