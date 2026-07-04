@@ -200,20 +200,21 @@ if (
     // INDEX
     // ===============================
     public function index(Request $request)
-    {
-    $this->cekDanKirimTugas();
+{
+    $query = TugasTetap::query()
+        ->where('pemberi_tugas', Auth::user()->name);
 
-       $query = TugasTetap::query()
-    ->where('pemberi_tugas', Auth::user()->name);
-
-        if ($request->status && $request->status !== 'semua') {
-            $query->where('status', $request->status);
-        }
-
-        $tugasTetap = $query->latest()->get();
-
-        return view('admin.kelola-tugas.tugas-tetap.index', compact('tugasTetap'));
+    if ($request->status && $request->status !== 'semua') {
+        $query->where('status', $request->status);
     }
+
+    $tugasTetap = $query->latest()->get();
+
+    return view(
+        'admin.kelola-tugas.tugas-tetap.index',
+        compact('tugasTetap')
+    );
+}
 
     // ===============================
     // CREATE
