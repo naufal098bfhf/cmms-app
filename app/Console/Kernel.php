@@ -74,7 +74,8 @@ class Kernel extends ConsoleKernel
    if (
     $tugas->jenis_tugas == 'tahunan' &&
     !empty($tugas->tanggal_tahunan) &&
-    Carbon::parse($tugas->tanggal_tahunan)->isSameDay($today)
+    Carbon::parse($tugas->tanggal_tahunan)->format('m-d')
+    == $today->format('m-d')
 ) {
     $kirim = true;
 }
@@ -82,9 +83,11 @@ class Kernel extends ConsoleKernel
     if (!$kirim) {
         continue;
     }
-    $sudahAda = TugasTetap::where('is_template', 0)
+  $sudahAda = TugasTetap::where('is_template', 0)
     ->where('mekanik_id', $tugas->mekanik_id)
     ->where('equipment_id', $tugas->equipment_id)
+    ->where('task_list', $tugas->task_list)
+    ->where('jenis_tugas', $tugas->jenis_tugas)
     ->whereDate('tanggal_mulai', $today)
     ->exists();
 
@@ -146,7 +149,7 @@ $tugas->update([
 ]);
 }   // tutup foreac
 
-})->dailyAt('07:00');
+})->everyMinute();
 
 
 /* =========================
@@ -160,10 +163,9 @@ $schedule->call(function () {
             $endOfDay   = $today->copy()->endOfDay();
 
             // Ambil tugas darurat yang statusnya terjadwal dan tanggal mulai = hari ini
-            $list = TugasDarurat::where('status', 'terjadwal')
-                ->whereBetween('tgl_mulai', [$startOfDay, $endOfDay])
-                ->get();
-
+            $list = TugasDarurat::where('status', 'pending')
+    ->whereBetween('tgl_mulai', [$startOfDay, $endOfDay])
+    ->get();
             foreach ($list as $t) {
 
                 // Simpan notifikasi + data tugas
@@ -182,8 +184,10 @@ $schedule->call(function () {
                     ])
                 ]);
 
-                // Update status menjadi release order
-                $t->update(['status' => 'release order']);
+               // Tandai bahwa notifikasi sudah pernah dikirim
+$t->update([
+    'notifikasi_terkirim' => true
+]);
             }
 
         })->everyMinute(); // cek setiap menit agar tepat tanggal mulai

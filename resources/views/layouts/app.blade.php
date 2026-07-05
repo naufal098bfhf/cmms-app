@@ -63,7 +63,7 @@
                         </svg>
                         Dashboard
                     </a>
-                @elseif(auth()->user()->role === 'maintenance-planning')
+                @elseif(in_array(auth()->user()->role, ['maintenance-planning', 'maintenance_planning']))
                     <a href="{{ route('maintenance-planning.dashboard') }}"
                         class="flex items-center px-4 py-2 rounded-lg transition
                         {{ request()->routeIs('maintenance-planning.dashboard') ? 'bg-red-900' : 'hover:bg-red-600' }}">
@@ -100,7 +100,7 @@
 @endif
 
 {{-- Maintenance Planning --}}
-@if(auth()->user()->role === 'maintenance-planning')
+@if(in_array(auth()->user()->role, ['maintenance-planning', 'maintenance_planning']))
     <a href="{{ route('maintenance-planning.kelola-equipment.index') }}"
         class="flex items-center px-4 py-2 rounded-lg transition
         {{ request()->routeIs('maintenance-planning.kelola-equipment.*') ? 'bg-red-900' : 'hover:bg-red-600' }}">
@@ -155,7 +155,7 @@
                         @endif
 
                         {{-- Maintenance Planning --}}
-                        @if(auth()->user()->role === 'maintenance-planning')
+                        @if(in_array(auth()->user()->role, ['maintenance-planning', 'maintenance_planning']))
                             <a href="{{ route('maintenance-planning.kelola-tugas.tugas-tetap.index') }}"
                                 class="block px-3 py-2 rounded-md text-sm
                                 {{ request()->routeIs('maintenance-planning.kelola-tugas.tugas-tetap.*')

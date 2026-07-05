@@ -10,8 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Notifications\TugasBaruNotification;
-use App\Jobs\KirimTugasTerjadwalJob;
-use App\Jobs\KirimTugasSekarangJob;
 use Carbon\Carbon;
 
 class TugasDaruratController extends Controller
@@ -92,17 +90,6 @@ class TugasDaruratController extends Controller
             ]);
 
             $jenis = 'tugas_darurat';
-
-            // =====================
-            // PENJADWALAN TUGAS
-            // =====================
-            $delay = max($mulai->diffInSeconds($now, false), 0);
-
-            if ($delay > 0) {
-                KirimTugasTerjadwalJob::dispatch($tugas, $jenis)->delay($delay);
-            } else {
-                KirimTugasSekarangJob::dispatch($tugas, $jenis);
-            }
         }
 
         return redirect()->route('admin.kelola-tugas.tugas-darurat.index')

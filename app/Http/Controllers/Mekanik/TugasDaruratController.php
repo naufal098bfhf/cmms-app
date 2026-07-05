@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
+
 class TugasDaruratController extends Controller
 {
     public function index()
@@ -17,37 +18,35 @@ class TugasDaruratController extends Controller
 $today = Carbon::today();
 
 $tugas = TugasDarurat::where('mekanik_id', Auth::id())
-
-    // tugas mulai hari ini atau masih aktif
-
-    /*
-    |--------------------------------------------------------------------------
-    | HANYA TUGAS HARI INI
-    |--------------------------------------------------------------------------
-    */
-   ->whereDate('tgl_mulai', '<=', $today)
-
+    ->whereDate('tgl_mulai', '=', $today)
     ->latest()
     ->get();
-  foreach ($tugas as $item) {
+
+foreach ($tugas as $item) {
+
+    // Notifikasi hanya dibuat jika tanggal mulai adalah HARI INI
+    if (!Carbon::parse($item->tgl_mulai)->isToday()) {
+        continue;
+    }
 
     $sudahNotif = Notifikasi::where('user_id', Auth::id())
-        ->whereDate('created_at', Carbon::today())
         ->where('tugas_id', $item->id)
+        ->where('type', 'tugas_darurat')
         ->exists();
 
     if (!$sudahNotif) {
 
-       Notifikasi::create([
-            'user_id' => $item->mekanik_id,
+        Notifikasi::create([
+            'user_id'  => Auth::id(),
             'tugas_id' => $item->id,
-            'type' => 'tugas_darurat',
-            'pesan' => "📋 Tugas Darurat ID {$item->id} aktif hari ini.",
-            'link' => '/maintenance-planning/kelola-tugas/tugas-darurat/' . $item->id,
-            'read' => false,
+            'type'     => 'tugas_darurat',
+            'pesan'    => "📋 Tugas Darurat {$item->equipment} aktif hari ini.",
+            'link'     => route('mekanik.tugas-darurat.show', $item->id),
+            'read'     => false,
         ]);
     }
 }
+
         // Warning otomatis jika deadline terlewati
         foreach ($tugas as $item) {
             if ($item->status === 'selesai') continue;

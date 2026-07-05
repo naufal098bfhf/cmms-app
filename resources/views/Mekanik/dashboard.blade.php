@@ -13,43 +13,47 @@ use App\Models\Notifikasi;
 $jumlahEquipment = Equipment::count();
 $today = Carbon::now();
 
-$tugasHariIni =
+    $tugasHariIni =
     TugasTetap::where('mekanik_id', Auth::id())
-        ->where(function ($q) use ($today) {
-            $q->where(function ($q2) use ($today) {
-                // MINGGUAN
-                $q2->where('jenis_tugas', 'mingguan')
-                   ->where('hari_mingguan', strtolower($today->locale('id')->dayName));
-            })
-            ->orWhere(function ($q2) use ($today) {
-                // BULANAN
-                $q2->where('jenis_tugas', 'bulanan')
-                   ->where('tanggal_bulanan', $today->day);
-            })
-            ->orWhere(function ($q2) use ($today) {
-                // TASK YANG SUDAH DIGENERATE (REAL)
-                $q2->whereDate('tanggal_mulai', $today);
-            });
-        })
+        ->where('is_template', false)
+        ->whereDate('tanggal_mulai', $today)
         ->where('status', '!=', 'selesai')
         ->count()
 
-    +
++
 
-    TugasDarurat::where('mekanik_id', Auth::id())
-        ->whereDate('tgl_mulai', $today)
-        ->where('status', '!=', 'selesai')
+TugasDarurat::where('mekanik_id', Auth::id())
+    ->whereDate('tgl_mulai', $today)
+    ->where('status', '!=', 'selesai')
+    ->count();
+
+$tugasPending =
+    TugasTetap::where('mekanik_id', Auth::id())
+        ->where('is_template', false)
+        ->whereIn('status', ['pending','dikerjakan'])
+        ->count()
+
++
+
+$tugasSelesai =
+    TugasTetap::where('mekanik_id', Auth::id())
+        ->where('is_template', false)
+        ->where('status', 'selesai')
+        ->count()
+
++
+
+TugasDarurat::where('mekanik_id', Auth::id())
+        ->where('status', 'selesai')
         ->count();
-
-$tugasPending = TugasTetap::where('mekanik_id', Auth::id())->where('status', 'pending')->count()
-    + TugasDarurat::where('mekanik_id', Auth::id())->where('status', 'pending')->count();
-
-$tugasSelesai = TugasTetap::where('mekanik_id', Auth::id())->where('status', 'selesai')->count()
-    + TugasDarurat::where('mekanik_id', Auth::id())->where('status', 'selesai')->count();
 
 // Data tabel
 $tugasDarurat = TugasDarurat::where('mekanik_id', Auth::id())->latest()->get();
-$tugasTetap   = TugasTetap::where('mekanik_id', Auth::id())->latest()->get();
+$tugasTetap =
+    TugasTetap::where('mekanik_id', Auth::id())
+        ->where('is_template', false)
+        ->latest()
+        ->get();
 @endphp
 
 <div class="space-y-4 sm:space-y-6 p-2 sm:p-0">
@@ -68,11 +72,17 @@ $tugasTetap   = TugasTetap::where('mekanik_id', Auth::id())->latest()->get();
                              5.36 6 7.92 6 11v3.159c0 .538-.214 1.055-.595
                              1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                 </svg>
-                @if(auth()->user()->unreadNotifications->count() > 0)
-                    <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 rounded-full">
-                        {{ auth()->user()->unreadNotifications->count() }}
-                    </span>
-                @endif
+               @php
+$jumlahNotif = \App\Models\Notifikasi::where('user_id', Auth::id())
+    ->where('read', false)
+    ->count();
+@endphp
+
+@if($jumlahNotif > 0)
+    <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 rounded-full">
+        {{ $jumlahNotif }}
+    </span>
+@endif
             </button>
 
            <!-- Dropdown Notifikasi -->

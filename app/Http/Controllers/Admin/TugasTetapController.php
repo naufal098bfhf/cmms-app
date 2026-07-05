@@ -11,6 +11,8 @@ use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Notifications\TugasBaruNotification;
+
 
 class TugasTetapController extends Controller
 {
@@ -58,31 +60,40 @@ if (!$sudahAda) {
     $tugasBaru = TugasTetap::create([
 
         'pemberi_tugas' => $item->pemberi_tugas,
-        'mekanik_id' => $item->mekanik_id,
-        'nama_mekanik' => $item->nama_mekanik,
-        'equipment_id' => $item->equipment_id,
-        'equipment' => $item->equipment,
-        'tag_number' => $item->tag_number,
-        'jenis_tugas' => $item->jenis_tugas,
+        'mekanik_id'    => $item->mekanik_id,
+        'nama_mekanik'  => $item->nama_mekanik,
+        'equipment_id'  => $item->equipment_id,
+        'equipment'     => $item->equipment,
+        'tag_number'    => $item->tag_number,
+        'jenis_tugas'   => $item->jenis_tugas,
         'hari_mingguan' => $item->hari_mingguan,
         'tanggal_mulai' => $hariIni,
-        'eq_class' => $item->eq_class,
-        'bom' => $item->bom,
-        'task_list' => $item->task_list,
-        'lokasi' => $item->lokasi,
-        'status' => 'pending',
-        'is_template' => false,
+        'eq_class'      => $item->eq_class,
+        'bom'           => $item->bom,
+        'task_list'     => $item->task_list,
+        'lokasi'        => $item->lokasi,
+        'status'        => 'pending',
+        'is_template'   => false,
     ]);
-}
-                Notifikasi::create([
-                    'user_id' => $item->mekanik_id,
-                    'pesan' => "Tugas mingguan: {$item->equipment}",
-                    'link' => route('mekanik.tugas-tetap.index'),
-                    'read' => false,
-                ]);
 
-                $terkirim = true;
-            }
+    Notifikasi::create([
+
+        'user_id'  => $item->mekanik_id,
+
+        'tugas_id' => $tugasBaru->id,
+
+        'pesan'    => "📋 Tugas Mingguan Baru: {$item->equipment}",
+
+        'link'     => route(
+            'mekanik.kelola-tugas.tetap.show',
+            $tugasBaru->id
+        ),
+
+        'read'     => false,
+    ]);
+
+    $terkirim = true;
+}
 
             // =====================
             // BULANAN (FIX TOTAL)
@@ -129,6 +140,7 @@ if (!$sudahAda) {
 
                     $terkirim = true;
                 }
+            }
             }
 
            // =====================
@@ -188,20 +200,21 @@ if (
     // INDEX
     // ===============================
     public function index(Request $request)
-    {
-    $this->cekDanKirimTugas();
+{
+    $query = TugasTetap::query()
+        ->where('pemberi_tugas', Auth::user()->name);
 
-       $query = TugasTetap::query()
-    ->where('pemberi_tugas', Auth::user()->name);
-
-        if ($request->status && $request->status !== 'semua') {
-            $query->where('status', $request->status);
-        }
-
-        $tugasTetap = $query->latest()->get();
-
-        return view('admin.kelola-tugas.tugas-tetap.index', compact('tugasTetap'));
+    if ($request->status && $request->status !== 'semua') {
+        $query->where('status', $request->status);
     }
+
+    $tugasTetap = $query->latest()->get();
+
+    return view(
+        'admin.kelola-tugas.tugas-tetap.index',
+        compact('tugasTetap')
+    );
+}
 
     // ===============================
     // CREATE
@@ -259,6 +272,14 @@ if (
 
                 'is_template'     => true,
             ]);
+            if ($mekanik) {
+    $mekanik->notify(
+        new TugasBaruNotification(
+            $tugasBaru,
+            'tugas_tetap'
+        )
+    );
+}
         }
 
         return redirect()->route('admin.kelola-tugas.tugas-tetap.index')
