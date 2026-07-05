@@ -29,7 +29,13 @@ public function store(Request $request)
         'name' => 'required',
         'email' => 'required|email|unique:users',
         'password' => 'required|min:6',
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
     ]);
+
+    $photoPath = null;
+    if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+        $photoPath = $request->file('photo')->store('photos', 'public');
+    }
 
     $user = User::create([
         'name' => $request->name,
@@ -37,7 +43,8 @@ public function store(Request $request)
         'password' => bcrypt($request->password),
         'role' => $request->role,
         'department' => $request->department,
-        'is_active' => 1,
+        'is_active' => (int) ($request->is_active ?? 1),
+        'photo' => $photoPath,
     ]);
 
     return response()->json($user, 201);
