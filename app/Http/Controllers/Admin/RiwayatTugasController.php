@@ -7,6 +7,7 @@ use App\Models\TugasTetap;
 use App\Models\TugasDarurat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RiwayatTugasController extends Controller
 {
@@ -282,5 +283,52 @@ $riwayat = $riwayatTetap
     ->values();
 
 return response()->json($riwayat);
+}
+public function downloadPdf(Request $request)
+{
+    $requestApi = new Request([
+        'start_date' => $request->input('start_date'),
+        'end_date'   => $request->input('end_date'),
+        'search'     => $request->input('search'),
+    ]);
+
+    $response = $this->indexApi($requestApi);
+
+    $riwayat = collect($response->getData(true));
+
+    foreach ($riwayat as &$item) {
+
+        if (!empty($item['bukti_foto'])) {
+
+            $path = storage_path('app/public/' . $item['bukti_foto']);
+
+            if (file_exists($path)) {
+
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+
+                $data = file_get_contents($path);
+
+                $item['foto_base64'] =
+                    'data:image/' . $type . ';base64,' . base64_encode($data);
+
+            } else {
+
+                $item['foto_base64'] = null;
+            }
+
+        } else {
+
+            $item['foto_base64'] = null;
+        }
+    }
+
+    $pdf = Pdf::loadView('admin.riwayat-tugas.pdf', [
+        'riwayat'   => $riwayat,
+        'startDate' => $request->input('start_date'),
+        'endDate'   => $request->input('end_date'),
+    ]);
+
+    return $pdf->setPaper('A4', 'landscape')
+               ->download('Riwayat Tugas.pdf');
 }
 }

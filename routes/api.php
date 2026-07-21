@@ -3,7 +3,6 @@
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Route;
 
-    use App\Http\Controllers\AuthController;
     use App\Http\Controllers\Api\UserController;
     use App\Http\Controllers\Api\EquipmentController;
     use App\Http\Controllers\Admin\RiwayatTugasController;
@@ -11,6 +10,7 @@
     use App\Http\Controllers\Auth\LoginController;
     use App\Http\Controllers\MaintenancePlanning\ValidasiTugasController;
     use App\Http\Controllers\Api\NotifikasiController;
+    use App\Http\Controllers\Api\AuthController;
 
     use App\Models\TugasDarurat;
     use App\Models\TugasTetap;
@@ -400,3 +400,7 @@
     );
     });
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [LoginController::class, 'apiLogin']);
+Route::post('/check-username', [AuthController::class, 'checkUsername']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);

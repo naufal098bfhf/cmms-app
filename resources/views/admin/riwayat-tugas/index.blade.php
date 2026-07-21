@@ -9,20 +9,38 @@
 
     <!-- Filter + Pencarian -->
     <div class="flex flex-col md:flex-row items-center justify-center gap-3 mb-8">
-        <form method="GET" action="{{ route('admin.riwayat-tugas.index') }}" class="flex flex-col md:flex-row items-center gap-3 flex-wrap">
-            <input type="date" name="start_date" value="{{ $startDate }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none">
-            <span class="text-gray-500 text-sm">sampai</span>
-            <input type="date" name="end_date" value="{{ $endDate }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none">
 
-            <!-- Pencarian teks -->
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, kode, atau equipment..."
-                   class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-rose-300 focus:outline-none">
+    <form method="GET"
+          action="{{ route('admin.riwayat-tugas.index') }}"
+          class="flex flex-col md:flex-row items-center gap-3 flex-wrap">
 
-            <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white font-medium px-4 py-2 rounded-lg transition">
-                Filter
-            </button>
-        </form>
-    </div>
+        <input type="date" name="start_date" value="{{ $startDate }}" class="border rounded-lg px-3 py-2">
+
+        <span>sampai</span>
+
+        <input type="date" name="end_date" value="{{ $endDate }}" class="border rounded-lg px-3 py-2">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ request('search') }}"
+            placeholder="Cari nama, kode, atau equipment..."
+            class="border rounded-lg px-3 py-2">
+
+        <button
+            type="submit"
+            class="bg-rose-500 text-white px-4 py-2 rounded-lg">
+            Filter
+        </button>
+
+        <a href="{{ route('admin.riwayat-tugas.pdf', request()->query()) }}"
+           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+            Download PDF
+        </a>
+
+    </form>
+
+</div>
 
     <!-- Tabel Riwayat -->
     <div class="overflow-x-auto">

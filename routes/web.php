@@ -212,3 +212,7 @@ Route::get('/cek-user', function () {
 Route::get('/privacy', function () {
     return view('privacy');
 });
+
+
+Route::get('/riwayat-tugas/pdf', [RiwayatTugasController::class, 'downloadPdf'])
+    ->name('admin.riwayat-tugas.pdf');
