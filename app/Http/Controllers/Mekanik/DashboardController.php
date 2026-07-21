@@ -41,66 +41,40 @@ class DashboardController extends Controller
 
         $tugasHariIni =
 
-            TugasTetap::where(
-                'mekanik_id',
-                $mekanikId
-            )
-            ->whereDate(
-                'tanggal_mulai',
-                $today
-            )
-            ->where(
-                'status',
-                '!=',
-                'selesai'
-            )
-            ->count()
+    TugasTetap::where('mekanik_id', $mekanikId)
+        ->where('is_template', false)
+        ->whereIn('status', [
+            'pending',
+            'dikerjakan'
+        ])
+        ->count()
 
-            +
+    +
 
-            TugasDarurat::where(
-                'mekanik_id',
-                $mekanikId
-            )
-            ->whereDate(
-                'tgl_mulai',
-                $today
-            )
-            ->where(
-                'status',
-                '!=',
-                'selesai'
-            )
-            ->count();
+    TugasDarurat::where('mekanik_id', $mekanikId)
+        ->whereIn('status', [
+            'pending',
+            'dikerjakan'
+        ])
+        ->count();
 
         // =========================================
         // TUGAS MENUNGGU
         // HANYA MILIK MEKANIK LOGIN
         // =========================================
 
-        $tugasPending =
+       $tugasPending =
 
-            TugasTetap::where(
-                'mekanik_id',
-                $mekanikId
-            )
-            ->whereIn('status', [
-                'pending',
-                'dikerjakan'
-            ])
-            ->count()
+    TugasTetap::where('mekanik_id', $mekanikId)
+        ->where('is_template', false)
+        ->where('status', 'pending')
+        ->count()
 
-            +
+    +
 
-            TugasDarurat::where(
-                'mekanik_id',
-                $mekanikId
-            )
-            ->whereIn('status', [
-                'pending',
-                'dikerjakan'
-            ])
-            ->count();
+    TugasDarurat::where('mekanik_id', $mekanikId)
+        ->where('status', 'pending')
+        ->count();
 
         // =========================================
         // TUGAS SELESAI
