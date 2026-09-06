@@ -193,14 +193,18 @@
                 </div>
 
                 {{-- Riwayat Tugas (Admin & Maintenance Planning & Mekanik) --}}
-                @php
-                    $riwayatRoute = match(auth()->user()->role) {
-                        'admin' => 'admin.riwayat-tugas.index',
-                        'maintenance-planning' => 'maintenance-planning.riwayat-tugas.index',
-                        'mekanik' => 'mekanik.riwayat-tugas.index',
-                        default => '#',
-                    };
-                @endphp
+               @php
+    $riwayatRoute = match(auth()->user()->role) {
+        'admin' => 'admin.riwayat-tugas.index',
+
+        'maintenance-planning',
+        'maintenance_planning' => 'maintenance-planning.riwayat-tugas.index',
+
+        'mekanik' => 'mekanik.riwayat-tugas.index',
+
+        default => '#',
+    };
+@endphp
 
                 <a href="{{ $riwayatRoute !== '#' ? route($riwayatRoute) : '#' }}"
                 class="flex items-center px-4 py-2 rounded-lg transition
